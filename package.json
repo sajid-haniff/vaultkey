@@ -1,16 +1,16 @@
 {
   "name": "vaultkey",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "version": "0.1.0",
+  "description": "Secure password manager built on Electron",
+  "main": "src/main/main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "electron .",
+    "start:dev": "NODE_ENV=development electron ."
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
   "devDependencies": {
-    "electron": "^41.2.2"
+    "electron": "^34.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
