@@ -1,37 +1,32 @@
 // src/preload/preload.js
 //
-// The preload script runs in the renderer's context BEFORE any renderer JS,
-// but it has access to a restricted Node.js surface (contextBridge, ipcRenderer).
-//
-// Its ONLY job: expose a narrow, explicit, validated API to the renderer.
-// Think of it as the API contract between two untrusted parties.
-//
-// Rules for this file:
-// - Only use contextBridge.exposeInMainWorld — never attach to window directly
-// - Never expose ipcRenderer itself — that would let the renderer send arbitrary IPC
-// - Never expose raw Node.js APIs (fs, path, child_process, etc.)
-// - Validate all inputs before forwarding to main
+// Preload scripts with sandbox:true cannot use ESM import syntax —
+// they are loaded by Chromium via a special require shim that only
+// supports CommonJS. This is a known Electron constraint.
+// We keep CommonJS here ONLY in this file, for this reason.
+// Everything else in the project uses ESM.
 
 const { contextBridge, ipcRenderer } = require('electron');
 
-// ── vaultAPI ─────────────────────────────────────────────────────────────────
-// This is the ENTIRE surface area the renderer has access to.
-// Every function here is a deliberate, auditable decision.
-// When we add features (vault read/write, password gen, etc.),
-// we add them here explicitly — never by expanding access.
+// ── Safe invoke wrapper ───────────────────────────────────────────────────
+// Every call goes through this. It ensures we never accidentally expose
+// ipcRenderer itself, and gives us a place to add logging/validation later.
+const invoke = (channel, ...args) => ipcRenderer.invoke(channel, ...args);
 
 contextBridge.exposeInMainWorld('vaultAPI', {
-    // Get the app version from the main process.
-    // Demonstrates the full IPC round-trip: renderer → preload → main → preload → renderer.
-    getAppVersion: () => ipcRenderer.invoke('app:get-version'),
+    // App
+    getVersion:     ()           => invoke('app:version'),
 
-    // Future expansion follows this exact same pattern:
-    // someFeature: (validatedInput) => ipcRenderer.invoke('channel:name', validatedInput),
+    // Vault lifecycle
+    vaultExists:    ()           => invoke('vault:exists'),
+    createVault:    (password)   => invoke('vault:create',     password),
+    unlockVault:    (password)   => invoke('vault:unlock',     password),
+    lockVault:      ()           => invoke('vault:lock'),
+    isUnlocked:     ()           => invoke('vault:is-unlocked'),
+
+    // CRUD
+    getEntries:     ()           => invoke('vault:get-entries'),
+    addEntry:       (fields)     => invoke('vault:add-entry',    fields),
+    updateEntry:    (id, fields) => invoke('vault:update-entry', id, fields),
+    deleteEntry:    (id)         => invoke('vault:delete-entry', id),
 });
-
-// ── Why 'vaultAPI' and not 'electron' or 'api'? ───────────────────────────────
-// Naming matters. 'vaultAPI' is:
-// - Specific to our application domain
-// - Searchable in code (easy to audit all usages)
-// - Unlikely to collide with browser globals
-// - Self-documenting about what it is

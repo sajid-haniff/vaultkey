@@ -2,29 +2,59 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-
-    <!--
-      Content-Security-Policy meta tag as a second layer of defense.
-      The primary CSP is set in main.js via response headers.
-      This meta tag provides defense-in-depth for any edge cases.
-    -->
-    <meta http-equiv="Content-Security-Policy"
-          content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';" />
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy"
+          content="default-src 'self' file:; script-src 'self' file:; style-src 'self' file: 'unsafe-inline'; img-src 'self' file: data:;" />
     <title>VaultKey</title>
     <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-<div class="app-shell">
 
-    <!-- ── LEFT NAV RAIL ───────────────────────────────────────────── -->
+<!-- ── UNLOCK SCREEN ──────────────────────────────────────────────── -->
+<!-- Shown when vault is locked or doesn't exist yet -->
+<div class="unlock-screen" id="unlock-screen">
+    <div class="unlock-card">
+        <div class="unlock-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2">
+                <rect x="3" y="11" width="18" height="11" rx="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+        </div>
+        <h1 class="unlock-title">VaultKey</h1>
+        <p class="unlock-sub" id="unlock-sub">Enter your master password</p>
+
+        <div class="unlock-field">
+            <input
+                    type="password"
+                    id="master-password"
+                    class="unlock-input"
+                    placeholder="Master password"
+                    autocomplete="current-password"
+            />
+        </div>
+
+        <div class="unlock-error" id="unlock-error"></div>
+
+        <button class="unlock-btn" id="unlock-btn">
+            <span id="unlock-btn-label">Unlock Vault</span>
+        </button>
+
+        <p class="unlock-hint" id="unlock-hint"></p>
+    </div>
+</div>
+
+<!-- ── APP SHELL ──────────────────────────────────────────────────── -->
+<!-- Hidden until vault is unlocked -->
+<div class="app-shell hidden" id="app-shell">
+
     <nav class="sidebar">
         <div class="sidebar-brand">
             <div class="brand-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2.5">
+                    <rect x="3" y="11" width="18" height="11" rx="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                 </svg>
             </div>
             <div class="brand-text">
@@ -34,133 +64,176 @@
         </div>
 
         <button class="generate-btn">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2.5">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
             </svg>
             Generate Password
         </button>
 
         <div class="nav-section-label">CATEGORIES</div>
-        <ul class="nav-list">
-            <li class="nav-item active">
+
+        <ul class="nav-list" id="nav-categories">
+            <li class="nav-item active" data-category="all">
                 <span class="nav-icon">⚡</span>
                 <span class="nav-label">All Items</span>
-                <span class="nav-badge">8</span>
+                <span class="nav-badge" id="badge-all">0</span>
             </li>
-            <li class="nav-item">
-                <span class="nav-icon">💰</span>
+            <li class="nav-item" data-category="Finance">
+                <span class="nav-icon">💳</span>
                 <span class="nav-label">Finance</span>
-                <span class="nav-badge">2</span>
+                <span class="nav-badge">0</span>
             </li>
-            <li class="nav-item">
+            <li class="nav-item" data-category="Social">
                 <span class="nav-icon">👥</span>
                 <span class="nav-label">Social</span>
-                <span class="nav-badge">2</span>
+                <span class="nav-badge">0</span>
             </li>
-            <li class="nav-item">
+            <li class="nav-item" data-category="Email">
                 <span class="nav-icon">✉️</span>
                 <span class="nav-label">Email</span>
-                <span class="nav-badge">1</span>
+                <span class="nav-badge">0</span>
             </li>
-            <li class="nav-item">
-                <span class="nav-icon">🧑‍💻</span>
+            <li class="nav-item" data-category="Developer">
+                <span class="nav-icon">⌨️</span>
                 <span class="nav-label">Developer</span>
-                <span class="nav-badge">1</span>
+                <span class="nav-badge">0</span>
             </li>
-            <li class="nav-item">
+            <li class="nav-item" data-category="Shopping">
                 <span class="nav-icon">🛍️</span>
                 <span class="nav-label">Shopping</span>
-                <span class="nav-badge">1</span>
+                <span class="nav-badge">0</span>
             </li>
-            <li class="nav-item">
+            <li class="nav-item" data-category="Streaming">
                 <span class="nav-icon">📺</span>
                 <span class="nav-label">Streaming</span>
-                <span class="nav-badge">1</span>
+                <span class="nav-badge">0</span>
             </li>
         </ul>
 
         <div class="sidebar-footer">
-            <div class="nav-item">
+            <div class="nav-item footer-item" id="btn-lock">
+                <span class="nav-icon">🔒</span>
+                <span class="nav-label">Lock Vault</span>
+            </div>
+            <div class="nav-item footer-item">
                 <span class="nav-icon">⚙️</span>
                 <span class="nav-label">Settings</span>
-            </div>
-            <div class="nav-item">
-                <span class="nav-icon">📊</span>
-                <span class="nav-label">Reports</span>
-            </div>
-            <div class="nav-item">
-                <span class="nav-icon">🔄</span>
-                <span class="nav-label">Sync</span>
             </div>
         </div>
     </nav>
 
-    <!-- ── CENTER LIST PANE ────────────────────────────────────────── -->
     <section class="list-pane">
         <div class="search-bar">
-            <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            <svg class="search-icon" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
             </svg>
-            <input type="text" class="search-input" placeholder="Search vault..." />
-            <span class="search-shortcut">⌘K</span>
+            <input type="text" class="search-input" id="search-input"
+                   placeholder="Search vault..." autocomplete="off" />
+            <kbd class="search-shortcut">⌘K</kbd>
         </div>
 
         <div class="metrics-grid">
             <div class="metric-card">
-                <span class="metric-value">8</span>
+                <span class="metric-value"        id="m-total">0</span>
                 <span class="metric-label">TOTAL</span>
             </div>
-            <div class="metric-card accent-green">
-                <span class="metric-value">5</span>
+            <div class="metric-card">
+                <span class="metric-value green"  id="m-strong">0</span>
                 <span class="metric-label">STRONG</span>
             </div>
-            <div class="metric-card accent-red">
-                <span class="metric-value">1</span>
+            <div class="metric-card">
+                <span class="metric-value red"    id="m-weak">0</span>
                 <span class="metric-label">WEAK</span>
             </div>
-            <div class="metric-card accent-purple">
-                <span class="metric-value">5</span>
+            <div class="metric-card">
+                <span class="metric-value purple" id="m-2fa">0</span>
                 <span class="metric-label">2FA ON</span>
             </div>
         </div>
 
-        <div class="breach-monitor">
+        <div class="breach-card">
             <div class="breach-header">
                 <span class="breach-dot"></span>
                 <span class="breach-title">Breach Monitor</span>
             </div>
-            <p class="breach-status">
-                <span class="all-clear">All clear!</span>
-                No compromised credentials detected. Last scan: 2 hours ago.
+            <p class="breach-body">
+                <span class="ok">All clear!</span>
+                No compromised credentials detected.
             </p>
         </div>
 
-        <div class="entries-header">8 ENTRIES</div>
-        <ul class="entries-list" id="entries-list">
-            <!-- Populated by renderer.js -->
-        </ul>
+        <div class="list-header" id="list-header">0 ENTRIES</div>
+        <ul class="entries-list" id="entries-list"></ul>
     </section>
 
-    <!-- ── RIGHT DETAIL PANE ───────────────────────────────────────── -->
     <section class="detail-pane" id="detail-pane">
-        <div class="detail-placeholder">
-            <div class="placeholder-icon">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3">
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        <div class="detail-empty" id="detail-empty">
+            <div class="empty-icon">
+                <svg width="44" height="44" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="1.2">
+                    <rect x="3" y="11" width="18" height="11" rx="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                 </svg>
             </div>
-            <p class="placeholder-text">Select an entry to view details</p>
-        </div>
-
-        <!-- Version pill — demonstrates our IPC round-trip -->
-        <div class="version-pill" id="version-display">
-            VaultKey v<span id="app-version">...</span>
+            <p>Select an entry to view details</p>
+            <button class="add-first-btn" id="btn-add-entry">+ Add Entry</button>
         </div>
     </section>
 
 </div>
+
+<!-- Add Entry Modal -->
+<div class="modal-overlay hidden" id="modal-overlay">
+    <div class="modal" id="modal-add-entry">
+        <div class="modal-header">
+            <h2 class="modal-title">New Entry</h2>
+            <button class="modal-close" id="modal-close">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="field-group">
+                <label class="field-label">Title</label>
+                <input class="field-input" id="f-title" placeholder="e.g. GitHub" />
+            </div>
+            <div class="field-group">
+                <label class="field-label">Category</label>
+                <select class="field-input" id="f-category">
+                    <option>Other</option>
+                    <option>Finance</option>
+                    <option>Social</option>
+                    <option>Email</option>
+                    <option>Developer</option>
+                    <option>Shopping</option>
+                    <option>Streaming</option>
+                </select>
+            </div>
+            <div class="field-group">
+                <label class="field-label">Username / Email</label>
+                <input class="field-input" id="f-username" placeholder="username or email" />
+            </div>
+            <div class="field-group">
+                <label class="field-label">Password</label>
+                <input class="field-input" id="f-password" type="password" placeholder="password" />
+            </div>
+            <div class="field-group">
+                <label class="field-label">URL</label>
+                <input class="field-input" id="f-url" placeholder="https://" />
+            </div>
+            <div class="field-group">
+                <label class="field-label">Notes</label>
+                <textarea class="field-input field-textarea" id="f-notes" placeholder="Optional notes"></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-secondary" id="btn-cancel">Cancel</button>
+            <button class="btn-primary"   id="btn-save">Save Entry</button>
+        </div>
+    </div>
+</div>
+
+<div class="version-badge">VaultKey <span id="app-version">…</span></div>
 
 <script src="renderer.js"></script>
 </body>
